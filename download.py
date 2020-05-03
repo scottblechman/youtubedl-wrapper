@@ -35,3 +35,50 @@ def download_info(url):
             err = f"Could not download video info.\n{dl_error}"
 
     return res, err
+
+
+def download_video(url, path):
+    """Download MP4 video from a provided URL.
+
+        :param url: User-inputted string from window.
+        :param path: File path to save video to.
+        :return: Video (None if error), error data if any.
+        """
+    if not url or url == '':
+        return None, "Could not download video.\nNo URL was provided."
+
+    res = None  # Video data
+    err = None  # Error
+
+    __options['outtmpl'] = path
+    with youtube_dl.YoutubeDL(__options) as ydl:
+        try:
+            res = ydl.download([url])
+        except youtube_dl.utils.DownloadError as dl_error:
+            err = f"Could not download video info.\n{dl_error}"
+
+    return res, err
+
+
+def download_audio(url, path):
+    """Download MP3 audio from a provided URL.
+
+            :param url: User-inputted string from window.
+            :param path: File path to save audio to.
+            :return: Audio (None if error), error data if any.
+            """
+    if not url or url == '':
+        return None, "Could not download video.\nNo URL was provided."
+
+    res = None  # Audio data
+    err = None  # Error
+
+    __options['outtmpl'] = path
+    __options['format'] = 'bestaudio/best'
+    with youtube_dl.YoutubeDL(__options) as ydl:
+        try:
+            res = ydl.download([url])
+        except youtube_dl.utils.DownloadError as dl_error:
+            err = f"Could not download audio.\n{dl_error}"
+
+    return res, err
