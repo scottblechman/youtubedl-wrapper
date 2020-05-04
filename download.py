@@ -1,13 +1,14 @@
 import datetime
 import youtube_dl
 
+# Passed to youtube-dl as flags
 __options = {
-    'nocheckcertificate': True,  # Important, youtube-dl will throw SSL errors otherwise.
-    'noplaylist': True  # Prevents downloading all videos if a playlist id is appended.
+    'nocheckcertificate': True,  # Stops youtube-dl from throwing SSL errors
+    'noplaylist': True  # Prevents downloading all videos if a playlist id is appended
 }
 
 
-def download_info(url):
+def __get_metadata(url):
     """Extract video metadata (title, uploader, etc.) from a provided URL.
 
     :param url: User-inputted string from window.
@@ -27,10 +28,9 @@ def download_info(url):
             formatted_length = str(datetime.timedelta(seconds=video_info['duration']))
             if video_info['duration'] < 3600:   # Trim videos under an hour to just mm:ss
                 formatted_length = formatted_length[-5:]
-            res = f"Title: {video_info['title']}\n" \
-                  f"Uploaded by: {video_info['uploader']}\n" \
-                  f"Views: {formatted_views}\n" \
-                  f"Length: {formatted_length}"
+
+            res = {'title': video_info['title'], 'uploader': video_info['uploader'],
+                   'views': formatted_views, 'length': formatted_length}
         except youtube_dl.utils.DownloadError as dl_error:
             err = f"Could not download video info.\n{dl_error}"
 
@@ -50,12 +50,15 @@ def download_video(url, path):
     res = None  # Video data
     err = None  # Error
 
-    __options['outtmpl'] = path
-    with youtube_dl.YoutubeDL(__options) as ydl:
-        try:
-            res = ydl.download([url])
-        except youtube_dl.utils.DownloadError as dl_error:
-            err = f"Could not download video info.\n{dl_error}"
+    data, error = __get_metadata(url)
+    if not error:
+        __options['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+        __options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
+        with youtube_dl.YoutubeDL(__options) as ydl:
+            try:
+                res = ydl.download([url])
+            except youtube_dl.utils.DownloadError as dl_error:
+                err = f"Could not download video info.\n{dl_error}"
 
     return res, err
 
@@ -73,8 +76,8 @@ def download_audio(url, path):
     res = None  # Audio data
     err = None  # Error
 
-    __options['outtmpl'] = path
-    __options['format'] = 'bestaudio/best'
+    __options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
+    __options['format'] = 'bestaudio[ext=m4a]/best[ext=m4a]'
     with youtube_dl.YoutubeDL(__options) as ydl:
         try:
             res = ydl.download([url])

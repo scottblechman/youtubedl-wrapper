@@ -1,8 +1,7 @@
 from enum import Enum
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QGridLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QWidget
 
-from download import download_info, download_video, download_audio
+from download import download_video, download_audio
 
 
 class DownloadType(Enum):
@@ -12,71 +11,63 @@ class DownloadType(Enum):
 
 
 class DownloadWidget(QWidget):
-    """PyQt5 widget for displaying video info and performing downloads."""
-    search_field = None
-    search_button = None
-
-    info_label = None
-
-    download_button = None
+    """PyQt5 widget for downloading video and audio from a URL."""
+    url_input = None    # Editable text field
 
     def __init__(self):
         super().__init__()
         self.init()
 
     def init(self):
-        self.setFixedSize(640, 480)
+        self.setFixedSize(320, 240)
         self.setWindowTitle("youtube-dl")
 
-        self.search_field = QLineEdit()
-        self.search_button = QPushButton("Search")
-        self.search_button.clicked.connect(self.search)
+        video_url_label = QLabel("Video URL:")
+        self.url_input = QLineEdit()
 
-        self.info_label = QLabel()
-        self.info_label.setAlignment(Qt.AlignCenter)
-
-        self.download_button = QPushButton("Download")
-        # self.download_video_button.clicked.connect(self.download_closure(DownloadType.VIDEO))
-        self.download_button.clicked.connect(self.save_file_dialog)
+        download_video_button = QPushButton("Download Video")
+        download_video_button.clicked.connect(self.open_dialog_video)
+        download_audio_button = QPushButton("Download Audio")
+        download_audio_button.clicked.connect(self.open_dialog_audio)
 
         grid = QGridLayout()
-        grid.addWidget(self.search_field, 0, 0)
-        grid.addWidget(self.search_button, 0, 1)
+        grid.addWidget(video_url_label, 0, 0)
+        grid.addWidget(self.url_input, 0, 1)
 
-        grid.addWidget(self.info_label, 1, 0, 1, 2)
-
-        grid.addWidget(self.download_button, 2, 0, 1, 2)
+        grid.addWidget(download_video_button, 1, 0, 1, 2)
+        grid.addWidget(download_audio_button, 2, 0, 1, 2)
 
         self.setLayout(grid)
         self.show()
 
-    def save_file_dialog(self):
-        options = QFileDialog.Options()
-        file_types = "Video Files (*.mp4);;Audio Files (*.wav);;"
-        file_name, file_filter = QFileDialog.getSaveFileName(self, "Save As", "", file_types, file_types, options=options)
-        if file_name:
-            # Append file extension if not provided
-            extension = file_filter[-5:-1]
-            if file_name[-4:] != extension:
-                file_name += extension
-
-            if extension == '.mp4':
-                self.download(DownloadType.VIDEO, file_name)
-
-    def search(self):
-        """Verify that the URL to download has valid video info, otherwise displaying an error."""
-        url = self.search_field.text()
-        res, err = download_info(url)
-        if err:
+    def open_dialog_video(self):
+        """Presents a native dialog to select the directory to save the video file to."""
+        if not self.url_input or self.url_input == '':
+            # No URL was provided, display a message to the user.
             alert = QMessageBox()
-            alert.setText(err)
+            alert.setText("Please provide a URL.")
             alert.exec_()
         else:
-            self.info_label.setText(res)
-            self.info_label.repaint()   # Needed on macOS to display results when window is focused.
+            path = str(QFileDialog.getExistingDirectory(self, "Save Video"))
+            if path:
+                # User selected a directory, download the video
+                self.download(DownloadType.VIDEO, path)
+
+    def open_dialog_audio(self):
+        """Presents a native dialog to select the directory to save the audio file to."""
+        if not self.url_input or self.url_input == '':
+            # No URL was provided, display a message to the user.
+            alert = QMessageBox()
+            alert.setText("Please provide a URL.")
+            alert.exec_()
+        else:
+            path = str(QFileDialog.getExistingDirectory(self, "Save Audio"))
+            if path:
+                # User selected a directory, download the audio
+                self.download(DownloadType.AUDIO, path)
 
     def download(self, dl_type, path):
-        url = self.search_field.text()
+        url = self.url_input.text()
         if dl_type == DownloadType.VIDEO:
             res, err = download_video(url, path)
             if err:
