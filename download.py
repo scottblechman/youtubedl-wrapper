@@ -1,10 +1,16 @@
 import datetime
 import youtube_dl
 
+
+def __progress_hook(download):
+    pass
+
+
 # Passed to youtube-dl as flags
 __options = {
     'nocheckcertificate': True,  # Stops youtube-dl from throwing SSL errors
-    'noplaylist': True  # Prevents downloading all videos if a playlist id is appended
+    'noplaylist': True,  # Prevents downloading all videos if a playlist id is appended
+    'progress_hooks': [__progress_hook]
 }
 
 
@@ -37,6 +43,7 @@ def __get_metadata(url):
     return res, err
 
 
+# noinspection PyTypeChecker
 def download_video(url, path):
     """Download MP4 video from a provided URL.
 
@@ -63,6 +70,7 @@ def download_video(url, path):
     return res, err
 
 
+# noinspection PyTypeChecker
 def download_audio(url, path):
     """Download MP3 audio from a provided URL.
 
@@ -78,6 +86,11 @@ def download_audio(url, path):
 
     __options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
     __options['format'] = 'bestaudio[ext=m4a]/best[ext=m4a]'
+    __options['postprocessors'] = [{
+          'key': 'FFmpegExtractAudio',
+          'preferredcodec': 'mp3',
+          'preferredquality': '192',
+      }]
     with youtube_dl.YoutubeDL(__options) as ydl:
         try:
             res = ydl.download([url])
