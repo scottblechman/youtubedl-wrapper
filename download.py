@@ -1,21 +1,21 @@
 import datetime
 import youtube_dl
 
-progress_subject = None
+progress_service = None
 
 
-def set_subject(subject):
-    global progress_subject
-    progress_subject = subject
+def set_service(service):
+    """Sets progress service to update on progress hook change."""
+    global progress_service
+    progress_service = service
 
 
 # noinspection PyUnresolvedReferences
 def __progress_hook(download):
-    """
-    Called automatically on download update. Updates the progress service_subject with the percent completed.
+    """Called automatically on download update. Updates the progress service_subject with the percent completed.
     :param download: File download status at discrete point in time
     """
-    if progress_subject:
+    if progress_service:
         percent_downloaded = 0.0
         time_remaining = ''
         if download['status'] == 'finished':
@@ -24,7 +24,7 @@ def __progress_hook(download):
         elif download['status'] == 'downloading':
             percent_downloaded = float(download['_percent_str'].lstrip().strip('%')) / 100
             time_remaining = download['_eta_str']
-        progress_subject.update_download_status(percent_downloaded, time_remaining)
+        progress_service.update_download_status(percent_downloaded, time_remaining)
 
 
 # Passed to youtube-dl as flags
@@ -37,7 +37,6 @@ _options = {
 
 def __get_metadata(url):
     """Extract video metadata (title, uploader, etc.) from a provided URL.
-
     :param url: User-inputted string from window.
     :return: Video info (None if error), error data if any.
     """
@@ -67,7 +66,6 @@ def __get_metadata(url):
 # noinspection PyTypeChecker
 def download_video(url, path):
     """Download MP4 video from a provided URL.
-
         :param url: User-inputted string from window.
         :param path: File path to save video to.
         :return: Video (None if error), error data if any.
@@ -94,7 +92,6 @@ def download_video(url, path):
 # noinspection PyTypeChecker
 def download_audio(url, path):
     """Download MP3 audio from a provided URL.
-
             :param url: User-inputted string from window.
             :param path: File path to save audio to.
             :return: Audio (None if error), error data if any.

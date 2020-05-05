@@ -55,13 +55,19 @@ class DownloadWidget(QWidget):
         self.show()
 
     def update_progress(self, percent_downloaded, time_remaining):
-        print(f"\n ETA: {time_remaining}\n")
+        """Updates progress bar and ETA label with current download status.
+        :param percent_downloaded: Download completion, between 0.0 and 1.0
+        :param time_remaining: Time remaining in hh:mm:ss, or another ETA message
+        """
         if time_remaining == 'Download completed.':
             self.time_remaining.setText(time_remaining)
         else:
             self.time_remaining.setText(f"Time Remaining: {time_remaining}")
+
+        # percent_downloaded will sometimes be 10,000 at completion; cap the value at 100
         self.progress_bar.setValue(min(int(percent_downloaded * 100), 100))
-        QApplication.processEvents()
+
+        QApplication.processEvents()    # Required for UI to update with current values
 
     def open_dialog_video(self):
         """Presents a native dialog to select the directory to save the video file to."""
@@ -90,6 +96,11 @@ class DownloadWidget(QWidget):
                 self.download(DownloadType.AUDIO, path)
 
     def download(self, dl_type, path):
+        """
+        :param dl_type: Specifies whether to download video or audio file
+        :param path: Directory to save file to
+        :return: Iff dl_type unspecified
+        """
         url = self.url_input.text()
         if dl_type == DownloadType.VIDEO:
             res, err = download_video(url, path)
