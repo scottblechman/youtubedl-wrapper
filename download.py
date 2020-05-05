@@ -1,13 +1,34 @@
 import datetime
 import youtube_dl
 
+progress_subject = None
 
+
+def set_subject(subject):
+    global progress_subject
+    progress_subject = subject
+
+
+# noinspection PyUnresolvedReferences
 def __progress_hook(download):
-    pass
+    """
+    Called automatically on download update. Updates the progress service_subject with the percent completed.
+    :param download: File download status at discrete point in time
+    """
+    if progress_subject:
+        percent_downloaded = 0.0
+        time_remaining = ''
+        if download['status'] == 'finished':
+            percent_downloaded = 100.0
+            time_remaining = 'Download completed.'
+        elif download['status'] == 'downloading':
+            percent_downloaded = float(download['_percent_str'].lstrip().strip('%')) / 100
+            time_remaining = download['_eta_str']
+        progress_subject.update_download_status(percent_downloaded, time_remaining)
 
 
 # Passed to youtube-dl as flags
-__options = {
+_options = {
     'nocheckcertificate': True,  # Stops youtube-dl from throwing SSL errors
     'noplaylist': True,  # Prevents downloading all videos if a playlist id is appended
     'progress_hooks': [__progress_hook]
@@ -26,7 +47,7 @@ def __get_metadata(url):
     res = None  # Video metadata
     err = None  # Error
 
-    with youtube_dl.YoutubeDL(__options) as ydl:
+    with youtube_dl.YoutubeDL(_options) as ydl:
         try:
             video_info = ydl.extract_info(url, download=False)  # With download=False, only metadata is returned
 
@@ -59,9 +80,9 @@ def download_video(url, path):
 
     data, error = __get_metadata(url)
     if not error:
-        __options['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
-        __options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
-        with youtube_dl.YoutubeDL(__options) as ydl:
+        _options['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+        _options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
+        with youtube_dl.YoutubeDL(_options) as ydl:
             try:
                 res = ydl.download([url])
             except youtube_dl.utils.DownloadError as dl_error:
@@ -84,14 +105,14 @@ def download_audio(url, path):
     res = None  # Audio data
     err = None  # Error
 
-    __options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
-    __options['format'] = 'bestaudio[ext=m4a]/best[ext=m4a]'
-    __options['postprocessors'] = [{
+    _options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
+    _options['format'] = 'bestaudio[ext=m4a]/best[ext=m4a]'
+    _options['postprocessors'] = [{
           'key': 'FFmpegExtractAudio',
           'preferredcodec': 'mp3',
           'preferredquality': '192',
       }]
-    with youtube_dl.YoutubeDL(__options) as ydl:
+    with youtube_dl.YoutubeDL(_options) as ydl:
         try:
             res = ydl.download([url])
         except youtube_dl.utils.DownloadError as dl_error:
