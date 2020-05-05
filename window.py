@@ -109,7 +109,9 @@ class DownloadWidget(QWidget):
                 alert.setText(err)
                 alert.exec_()
             else:
-                pass
+                success = QMessageBox()
+                success.setText(f"Successfully downloaded {res}.")
+                success.exec_()
         elif dl_type == DownloadType.AUDIO:
             res, err = download_audio(url, path)
             if err:
@@ -117,7 +119,9 @@ class DownloadWidget(QWidget):
                 alert.setText(err)
                 alert.exec_()
             else:
-                pass
+                success = QMessageBox()
+                success.setText(f"Successfully downloaded {res}.")
+                success.exec_()
         else:
             # The download type was not an expected value, throw an error.
             alert = QMessageBox()

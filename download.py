@@ -1,4 +1,5 @@
 import datetime
+import os
 import youtube_dl
 
 progress_service = None
@@ -68,7 +69,7 @@ def download_video(url, path):
     """Download MP4 video from a provided URL.
         :param url: User-inputted string from window.
         :param path: File path to save video to.
-        :return: Video (None if error), error data if any.
+        :return: Video filename (None if error), error data if any.
         """
     if not url or url == '':
         return None, "Could not download video.\nNo URL was provided."
@@ -77,6 +78,9 @@ def download_video(url, path):
     err = None  # Error
 
     data, error = __get_metadata(url)
+    if os.path.exists(f"{path}/{data['uploader']} - {data['title']}.mp4"):
+        # The file has already been downloaded to this location; youtube-dl will not perform a download.
+        return None, f"Could not download video.\nA file with this name already exists in {path}."
     if not error:
         _options['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
         _options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
@@ -84,9 +88,9 @@ def download_video(url, path):
             try:
                 res = ydl.download([url])
             except youtube_dl.utils.DownloadError as dl_error:
-                err = f"Could not download video info.\n{dl_error}"
+                err = f"Could not download video.\n{dl_error}"
 
-    return res, err
+    return f"{data['uploader']} - {data['title']}.mp4", err
 
 
 # noinspection PyTypeChecker
@@ -94,7 +98,7 @@ def download_audio(url, path):
     """Download MP3 audio from a provided URL.
             :param url: User-inputted string from window.
             :param path: File path to save audio to.
-            :return: Audio (None if error), error data if any.
+            :return: Audio filename (None if error), error data if any.
             """
     if not url or url == '':
         return None, "Could not download video.\nNo URL was provided."
@@ -102,17 +106,22 @@ def download_audio(url, path):
     res = None  # Audio data
     err = None  # Error
 
-    _options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
-    _options['format'] = 'bestaudio[ext=m4a]/best[ext=m4a]'
-    _options['postprocessors'] = [{
-          'key': 'FFmpegExtractAudio',
-          'preferredcodec': 'mp3',
-          'preferredquality': '192',
-      }]
-    with youtube_dl.YoutubeDL(_options) as ydl:
-        try:
-            res = ydl.download([url])
-        except youtube_dl.utils.DownloadError as dl_error:
-            err = f"Could not download audio.\n{dl_error}"
+    data, error = __get_metadata(url)
+    if os.path.exists(f"{path}/{data['uploader']} - {data['title']}.mp3"):
+        # The file has already been downloaded to this location; youtube-dl will not perform a download.
+        return None, f"Could not download audio.\nA file with this name already exists in {path}."
+    if not error:
+        _options['outtmpl'] = f'{path}/%(uploader)s - %(title)s.%(ext)s'
+        _options['format'] = 'bestaudio[ext=m4a]/best[ext=m4a]'
+        _options['postprocessors'] = [{
+              'key': 'FFmpegExtractAudio',
+              'preferredcodec': 'mp3',
+              'preferredquality': '192',
+          }]
+        with youtube_dl.YoutubeDL(_options) as ydl:
+            try:
+                res = ydl.download([url])
+            except youtube_dl.utils.DownloadError as dl_error:
+                err = f"Could not download audio.\n{dl_error}"
 
-    return res, err
+    return f"{data['uploader']} - {data['title']}.mp3", err
