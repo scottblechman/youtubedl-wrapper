@@ -1,0 +1,64 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # To make use of pyinstaller, target Python 3.7 instead of 3.8
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.7'
+        architecture: 'x64'
+          
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Run Pyinstaller
+      run: |
+        python -m PyInstaller.__main__ -F -w -n YoutubeDL-Wrapper main.py
+        
+    - name: Upload executable
+      uses: actions/upload-artifact@master
+      with:
+          name: Windows
+          path: dist/YoutubeDL-Wrapper.exe
+  
+  build-macos:
+    runs-on: macOS-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # To make use of pyinstaller, target Python 3.7 instead of 3.8
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.7'
+        architecture: 'x64'
+          
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Run Pyinstaller
+      run: |
+        python -m PyInstaller.__main__ -F -w -n YoutubeDL-Wrapper main.py
+        
+    - name: Upload executable
+      uses: actions/upload-artifact@master
+      with:
+          name: MacOS
+          path: dist/YoutubeDL-Wrapper.app
