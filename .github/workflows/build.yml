@@ -32,11 +32,11 @@ jobs:
     - name: Upload executable
       uses: actions/upload-artifact@master
       with:
-          name: Windows
+          name: Windows executable (.exe)
           path: dist/YoutubeDL-Wrapper.exe
   
   build-macos:
-    runs-on: macOS-latest
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -46,7 +46,6 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: '3.7'
-        architecture: 'x64'
           
     - name: Install dependencies
       run: |
@@ -55,10 +54,10 @@ jobs:
 
     - name: Run Pyinstaller
       run: |
-        python -m PyInstaller.__main__ -F -w -n YoutubeDL-Wrapper main.py
+        python -m PyInstaller.__main__ -F -w --osx-bundle-identifier com.scottblechman.youtubedl-wrapper -n YoutubeDL-Wrapper main.py
         
     - name: Upload executable
       uses: actions/upload-artifact@master
       with:
-          name: MacOS
+          name: macOS executable (.app)
           path: dist/YoutubeDL-Wrapper.app
